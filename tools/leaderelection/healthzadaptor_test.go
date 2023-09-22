@@ -24,6 +24,7 @@ import (
 
 	"net/http"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	rl "k8s.io/client-go/tools/leaderelection/resourcelock"
 	testingclock "k8s.io/utils/clock/testing"
 )
@@ -89,9 +90,9 @@ func TestLeaderElectionHealthChecker(t *testing.T) {
 				},
 				observedRecord: rl.LeaderElectionRecord{
 					HolderIdentity: "healthTest",
+					AcquireTime:    metav1.Time{Time: current},
 				},
-				observedTime: current,
-				clock:        testingclock.NewFakeClock(current.Add(time.Hour)),
+				clock: testingclock.NewFakeClock(current.Add(time.Hour)),
 			},
 		},
 		{
@@ -106,9 +107,9 @@ func TestLeaderElectionHealthChecker(t *testing.T) {
 				},
 				observedRecord: rl.LeaderElectionRecord{
 					HolderIdentity: "otherServer",
+					AcquireTime:    metav1.Time{Time: current},
 				},
-				observedTime: current,
-				clock:        testingclock.NewFakeClock(current.Add(time.Hour)),
+				clock: testingclock.NewFakeClock(current.Add(time.Hour)),
 			},
 		},
 		{
@@ -123,9 +124,9 @@ func TestLeaderElectionHealthChecker(t *testing.T) {
 				},
 				observedRecord: rl.LeaderElectionRecord{
 					HolderIdentity: "healthTest",
+					AcquireTime:    metav1.Time{Time: current},
 				},
-				observedTime: current,
-				clock:        testingclock.NewFakeClock(current),
+				clock: testingclock.NewFakeClock(current),
 			},
 		},
 		{
@@ -140,9 +141,9 @@ func TestLeaderElectionHealthChecker(t *testing.T) {
 				},
 				observedRecord: rl.LeaderElectionRecord{
 					HolderIdentity: "healthTest",
+					AcquireTime:    metav1.Time{Time: current},
 				},
-				observedTime: current,
-				clock:        testingclock.NewFakeClock(current.Add(time.Minute).Add(time.Second)),
+				clock: testingclock.NewFakeClock(current.Add(time.Minute).Add(time.Second)),
 			},
 		},
 	}

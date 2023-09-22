@@ -183,7 +183,6 @@ type LeaderElector struct {
 	// internal bookkeeping
 	observedRecord    rl.LeaderElectionRecord
 	observedRawRecord []byte
-	observedTime      time.Time
 	// used to implement OnNewLeader(), may lag slightly from the
 	// value observedRecord.HolderIdentity if the transition has
 	// not yet been reported.
@@ -349,7 +348,7 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 		le.observedRawRecord = oldLeaderElectionRawRecord
 	}
 	if len(oldLeaderElectionRecord.HolderIdentity) > 0 &&
-		le.observedTime.Add(time.Second*time.Duration(oldLeaderElectionRecord.LeaseDurationSeconds)).After(now.Time) &&
+		oldLeaderElectionRecord.AcquireTime.Add(time.Second*time.Duration(oldLeaderElectionRecord.LeaseDurationSeconds)).After(now.Time) &&
 		!le.IsLeader() {
 		klog.V(4).Infof("lock is held by %v and has not yet expired", oldLeaderElectionRecord.HolderIdentity)
 		return false
@@ -393,7 +392,7 @@ func (le *LeaderElector) Check(maxTolerableExpiredLease time.Duration) error {
 	// If we are more than timeout seconds after the lease duration that is past the timeout
 	// on the lease renew. Time to start reporting ourselves as unhealthy. We should have
 	// died but conditions like deadlock can prevent this. (See #70819)
-	if le.clock.Since(le.observedTime) > le.config.LeaseDuration+maxTolerableExpiredLease {
+	if le.clock.Since(le.observedRecord.AcquireTime.Time) > le.config.LeaseDuration+maxTolerableExpiredLease {
 		return fmt.Errorf("failed election to renew leadership on lease %s", le.config.Name)
 	}
 
@@ -407,7 +406,6 @@ func (le *LeaderElector) setObservedRecord(observedRecord *rl.LeaderElectionReco
 	defer le.observedRecordLock.Unlock()
 
 	le.observedRecord = *observedRecord
-	le.observedTime = le.clock.Now()
 }
 
 // getObservedRecord returns observersRecord.
